@@ -9,3 +9,8 @@ sudo apt-get install python3-opencv
 sudo apt-get install python3-pil.imagetk python3-tk
 pip3 install -r requirements.txt
 ```
+
+## Start the dashboard
+```
+python3 Dashboard.py
+```
