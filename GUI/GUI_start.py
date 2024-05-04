@@ -58,7 +58,7 @@ class threadGUI_start(ThreadWithStop):
         """
         clock = pygame.time.Clock()
         # setting the window size
-        size = window_width, window_height = 1260, 500
+        size = window_width, window_height = 1560, 700
         screen = pygame.display.set_mode(size)
         last_1_sec_call_time = pygame.time.get_ticks()
         last_60_fps_call_time = pygame.time.get_ticks()

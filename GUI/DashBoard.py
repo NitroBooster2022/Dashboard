@@ -122,10 +122,10 @@ class DashBoard(State):
         self.buttonAutonomEnable = True
         self.buttonSpeedEnable = True
         self.button = Button(
-            500, 350, self.startcommand, self.game, self.main_surface, "autonom"
+            100, 550, self.startcommand, self.game, self.main_surface, "autonom"
         )
         self.button2 = Button(
-            650, 350, self.startcommand, self.game, self.main_surface, "speed"
+            300, 550, self.startcommand, self.game, self.main_surface, "speed"
         )
         self.map = Map(40, 30, self.game, self.main_surface, car_x=230, car_y=1920)
         self.alerts = Alerts(20, 240, self.game, self.main_surface, 250)
@@ -140,10 +140,10 @@ class DashBoard(State):
             height=300,
         )
         # self.camera = Camera(850, 350, self.game, self.main_surface)
-        self.camera = Camera(550, 10, self.game, self.main_surface, width=600, height=300,)
-        self.buttonSave = Button_Text(970, 315, self.game, self.main_surface, "Save")
-        self.buttonLoad = Button_Text(1045, 315, self.game, self.main_surface, "Load")
-        self.buttonReset = Button_Text(1120, 315, self.game, self.main_surface, "Reset")
+        self.camera = Camera(550, 10, self.game, self.main_surface, width=1000, height=700)
+        # self.buttonSave = Button_Text(970, 315, self.game, self.main_surface, "Save")
+        # self.buttonLoad = Button_Text(1045, 315, self.game, self.main_surface, "Load")
+        # self.buttonReset = Button_Text(1120, 315, self.game, self.main_surface, "Reset")
         # self.objects = [self.map, self.alerts, self.table, self.camera]
         self.objects = [self.map, self.alerts, self.camera]
 
@@ -185,19 +185,37 @@ class DashBoard(State):
         # self.localization_sub = rospy.Subscriber("/automobile/localisation", localisation, self.gps_callback, queue_size=3)
         # self.model_sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.gps_callback, queue_size=3)
         self.ekf_sub = rospy.Subscriber("/odometry/filtered", Odometry, self.ekf_callback, queue_size=3)
-        self.gmapping_sub = rospy.Subscriber("/chassis_pose", PoseWithCovarianceStamped, self.gmapping_callback, queue_size=3)
+        # self.gmapping_sub = rospy.Subscriber("/chassis_pose", PoseWithCovarianceStamped, self.gmapping_callback, queue_size=3)
         # self.hector_sub = rospy.Subscriber("/poseupdate", PoseWithCovarianceStamped, self.hector_callback, queue_size=3)
-        # self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback, queue_size=3)
-        # self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
-        # self.imu1_sub = rospy.Subscriber("/car1/imu", Imu, self.imu1_callback, queue_size=3)
+        self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback, queue_size=3)
+        self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
+        self.imu1_sub = rospy.Subscriber("/car1/data", Imu, self.imu1_callback, queue_size=3)
         self.waypoint_sub = rospy.Subscriber("/waypoints", Float32MultiArray, self.waypoint_callback, queue_size=3)
         self.cars_sub = rospy.Subscriber("/car_locations", Float32MultiArray, self.cars_callback, queue_size=3)
+
+        self.numObj = 0
+        self.detected_objects = np.zeros(7)
+        self.confidence_thresholds = [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.65, 0.65, 0.65, 0.65, 0.7, 0.75]
+        self.class_names = ["oneway", "highwayentrance", "stopsign", "roundabout", "park", "crosswalk", "noentry", "highwayexit", "priority", "lights", "block", "pedestrian", "car"]
+        self.sign_sub = rospy.Subscriber("/sign", Float32MultiArray, self.sign_callback, queue_size=3)
 
         print(os.path.dirname(os.path.realpath(__file__))+'/map2024.png')
         self.map1 = cv2.imread(os.path.dirname(os.path.realpath(__file__))+'/map2024.png')
         #shape is (8107, 12223, 3)
         # self.map = cv2.resize(self.map, (700, int(self.map.shape[0]/self.map.shape[1]*700)))
         self.map1 = cv2.resize(self.map1, (700, int(1/1.38342246*700)))
+
+    def sign_callback(self, sign):
+        if sign.data:
+            self.numObj = len(sign.data) // 7
+            if self.numObj == 1:
+                self.detected_objects = np.array(sign.data)
+                # print(self.detected_objects)
+                return
+            self.detected_objects = np.array(sign.data).reshape(-1, 7).T
+            # print(self.detected_objects)
+        else:
+            self.numObj = 0
 
     def startcommand(self, start):
         print("service call")
@@ -234,6 +252,29 @@ class DashBoard(State):
         :return: nothing but sets [cv_image] to the usefull image that can be use in opencv (numpy array)
         """
         self.cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+
+        for i in range(self.numObj):
+            text = ""
+            try:
+                id = int(self.detected_objects[7*i+6])
+            except:
+                return
+            if self.detected_objects[7*i+5] < self.confidence_thresholds[id]:
+                continue
+            text = f"{self.class_names[id]} {self.detected_objects[7*i+5] * 100:.1f}%"
+            label_size, baseLine = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+
+            x = int(self.detected_objects[7*i])
+            y = int(self.detected_objects[7*i+1]) - label_size[1] - baseLine
+            if y < 0:
+                y = 0
+            if x + label_size[0] > self.cv_image.shape[1]:
+                x = self.cv_image.shape[1] - label_size[0]
+
+            cv2.rectangle(self.cv_image, (x, y), (x + label_size[0], y + label_size[1] + baseLine), (255, 255, 255), -1)
+            cv2.putText(self.cv_image, text, (x, y + label_size[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+            cv2.rectangle(self.cv_image, (int(self.detected_objects[7*i]), int(self.detected_objects[7*i+1])), (int(self.detected_objects[7*i+2]), int(self.detected_objects[7*i+3])), (255, 255, 0), 2)
+            
         self.camera.change_frame(self.cv_image)
         # cv2.imshow("Frame preview", self.cv_image)
         # key = cv2.waitKey(1)
@@ -301,15 +342,16 @@ class DashBoard(State):
     # def hector_callback(self, data):
     #     self.ekfState[0] = data.pose.pose.position.x + 11.71
     #     self.ekfState[1] = data.pose.pose.position.y +  1.895
-    # def odom_callback(self, data):
-    #     self.odomState[0] = data.pose.pose.position.x
-    #     self.odomState[1] = data.pose.pose.position.y
-    # def imu1_callback(self, imu):
-    #     self.yaw1 = tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
-    #     self.accelList_x.append(imu.linear_acceleration.x)
-    #     self.accelList_y.append(imu.linear_acceleration.y)
+    def odom_callback(self, data):
+        self.odomState[0] = data.pose.pose.position.x
+        self.odomState[1] = data.pose.pose.position.y
+    def imu1_callback(self, imu):
+        self.yaw1 = -tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
+        self.accelList_x.append(imu.linear_acceleration.x)
+        self.accelList_y.append(imu.linear_acceleration.y)
 
     def display(self):
+        # print("displaying")
         img_map = self.map1.copy()
         
         # ekf
@@ -498,9 +540,9 @@ class DashBoard(State):
             self.button.draw()
         if self.buttonSpeedEnable:
             self.button2.draw()
-        self.buttonSave.draw()
-        self.buttonLoad.draw()
-        self.buttonReset.draw()
+        # self.buttonSave.draw()
+        # self.buttonLoad.draw()
+        # self.buttonReset.draw()
         battery_show = self.font_small.render(
             str(self.battery) + "%", True, self.battery_color
         )
