@@ -94,7 +94,7 @@ class Button(Object):
         self.surface.blit(text_surface, (text_x, text_y))
         super().draw()
 
-    def update(self):
+    def update(self, state=None):
         """
         Update the toggle button's state and send control commands.
 
@@ -103,6 +103,10 @@ class Button(Object):
         the engine, reset steering, and set speed to zero.
 
         """
+        if state is not None:
+            self.on = not state
+            # self.draw()
+            return
         super().update()
         if self.on is False:
             # self.pipe.send({"action": "startEngine", "value": True})

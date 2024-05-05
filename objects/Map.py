@@ -32,7 +32,7 @@ from math import pi
 
 class Map(Object):
     point_radius = 8
-    view_size = [150, 150]
+    view_size = [250, 250]
     """
     Initialize a map object.
 
@@ -48,7 +48,7 @@ class Map(Object):
 
     """
 
-    def __init__(self, x, y, game, window, width=200, height=200, car_x=100, car_y=100):
+    def __init__(self, x, y, game, window, width=400, height=450, car_x=100, car_y=100):
         super().__init__(x, y, game, window, width, height)
         self.car_x = car_x
         self.car_y = car_y
@@ -148,18 +148,18 @@ class Map(Object):
         self.view = self.game.transform.scale(self.view, (self.width, self.height))
         self.surface.blit(self.view, (0, 0))
         self.game.draw.rect(self.surface, (122, 122, 122), self.frame, 3)
-        self.game.draw.circle(
-            self.surface,
-            (0, 0, 255),
-            (self.rap * self.point_x, self.rap * self.point_y),
-            self.point_radius,
-        )
-        self.game.draw.circle(
-            self.surface,
-            (255, 255, 255),
-            (self.rap * self.point_x, self.rap * self.point_y),
-            self.point_radius - 3,
-        )
+        # self.game.draw.circle(
+        #     self.surface,
+        #     (0, 0, 255),
+        #     (self.rap * self.point_x, self.rap * self.point_y),
+        #     self.point_radius,
+        # )
+        # self.game.draw.circle(
+        #     self.surface,
+        #     (255, 255, 255),
+        #     (self.rap * self.point_x, self.rap * self.point_y),
+        #     self.point_radius - 3,
+        # )
 
         north = self.font.render("X", True, (255, 255, 255))
         east = self.font.render("Y", True, (255, 255, 255))

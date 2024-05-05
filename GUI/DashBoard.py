@@ -53,6 +53,7 @@ import os
 from std_srvs.srv import SetBool, SetBoolRequest
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import time
+import rosservice
 
 class DashBoard(State):
     """
@@ -122,30 +123,30 @@ class DashBoard(State):
         self.buttonAutonomEnable = True
         self.buttonSpeedEnable = True
         self.button = Button(
-            100, 550, self.startcommand, self.game, self.main_surface, "autonom"
+            200, 550, self.startcommand, self.game, self.main_surface, "autonom"
         )
         self.button2 = Button(
-            300, 550, self.startcommand, self.game, self.main_surface, "speed"
+            400, 550, self.startcommand, self.game, self.main_surface, "speed"
         )
         self.map = Map(40, 30, self.game, self.main_surface, car_x=230, car_y=1920)
-        self.alerts = Alerts(20, 240, self.game, self.main_surface, 250)
-        self.table = Table(
-            self.pipeSend,
-            self.pipeRecv,
-            550,
-            10,
-            self.game,
-            self.main_surface,
-            width=600,
-            height=300,
-        )
+        # self.alerts = Alerts(20, 240, self.game, self.main_surface, 250)
+        # self.table = Table(
+        #     self.pipeSend,
+        #     self.pipeRecv,
+        #     550,
+        #     10,
+        #     self.game,
+        #     self.main_surface,
+        #     width=600,
+        #     height=300,
+        # )
         # self.camera = Camera(850, 350, self.game, self.main_surface)
-        self.camera = Camera(550, 10, self.game, self.main_surface, width=1000, height=700)
+        self.camera = Camera(750, 10, self.game, self.main_surface, width=800, height=700)
         # self.buttonSave = Button_Text(970, 315, self.game, self.main_surface, "Save")
         # self.buttonLoad = Button_Text(1045, 315, self.game, self.main_surface, "Load")
         # self.buttonReset = Button_Text(1120, 315, self.game, self.main_surface, "Reset")
         # self.objects = [self.map, self.alerts, self.table, self.camera]
-        self.objects = [self.map, self.alerts, self.camera]
+        self.objects = [self.map, self.camera]
 
         self.name = 'car1'
         self.odomState = np.zeros(2)
@@ -189,7 +190,7 @@ class DashBoard(State):
         # self.hector_sub = rospy.Subscriber("/poseupdate", PoseWithCovarianceStamped, self.hector_callback, queue_size=3)
         self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback, queue_size=3)
         self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
-        self.imu1_sub = rospy.Subscriber("/car1/data", Imu, self.imu1_callback, queue_size=3)
+        self.imu1_sub = rospy.Subscriber("/car1/imu", Imu, self.imu1_callback, queue_size=3)
         self.waypoint_sub = rospy.Subscriber("/waypoints", Float32MultiArray, self.waypoint_callback, queue_size=3)
         self.cars_sub = rospy.Subscriber("/car_locations", Float32MultiArray, self.cars_callback, queue_size=3)
 
@@ -212,7 +213,7 @@ class DashBoard(State):
                 self.detected_objects = np.array(sign.data)
                 # print(self.detected_objects)
                 return
-            self.detected_objects = np.array(sign.data).reshape(-1, 7).T
+            self.detected_objects = np.array(sign.data)#.reshape(-1, 7).T
             # print(self.detected_objects)
         else:
             self.numObj = 0
@@ -251,7 +252,7 @@ class DashBoard(State):
         :param data: sensor_msg array containing the image in the Gazsbo format
         :return: nothing but sets [cv_image] to the usefull image that can be use in opencv (numpy array)
         """
-        self.cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        self.cv_image = self.bridge.imgmsg_to_cv2(data, "rgb8")
 
         for i in range(self.numObj):
             text = ""
@@ -422,7 +423,20 @@ class DashBoard(State):
         # self.map.new_coordinates(11223, 2500)
         # self.map.update()
         self.display()
-        self.alerts.setValues("cross")
+        service_list = rosservice.get_service_list()
+        if '/start_bool' in service_list:
+            self.button.update(True)
+            self.buttonAutonomEnable = True
+            self.button2.update(True)
+            self.buttonSpeedEnable = True
+            # print("The service '/start_bool' exists.")
+        else:
+            self.button.update(False)
+            self.buttonAutonomEnable = False
+            self.button2.update(False)
+            self.buttonSpeedEnable = False
+            # print("The service '/start_bool' does not exist.")
+        # self.alerts.setValues("cross")
         time.sleep(0.1)
         if self.pipeRecv.poll():
             msg = self.pipeRecv.recv()
@@ -543,44 +557,44 @@ class DashBoard(State):
         # self.buttonSave.draw()
         # self.buttonLoad.draw()
         # self.buttonReset.draw()
-        battery_show = self.font_small.render(
-            str(self.battery) + "%", True, self.battery_color
-        )
-        self.main_surface.blit(battery_show, (280, 10))
-        self.main_surface.blit(self.speed_image, (250, -25))
+        # battery_show = self.font_small.render(
+        #     str(self.battery) + "%", True, self.battery_color
+        # )
+        # self.main_surface.blit(battery_show, (480, 10))
+        self.main_surface.blit(self.speed_image, (450, -25))
 
-        self.game.draw.line(self.main_surface, (255, 255, 255), (330, 480), (330, 310))
-        self.game.draw.line(self.main_surface, (255, 255, 255), (460, 480), (460, 310))
-        self.main_surface.blit(self.little_car, (353 + self.lane_error, 350))
-        self.game.draw.arc(
-            self.main_surface,
-            self.battery_color,
-            [260, 10, 280, 250],
-            pi / 4 + (100 - self.battery) * (pi / 2) / 100,
-            pi - pi / 4,
-            25,
-        )
+        self.game.draw.line(self.main_surface, (255, 255, 255), (530, 480), (530, 310))
+        self.game.draw.line(self.main_surface, (255, 255, 255), (660, 480), (660, 310))
+        self.main_surface.blit(self.little_car, (553 + self.lane_error, 350))
+        # self.game.draw.arc(
+        #     self.main_surface,
+        #     self.battery_color,
+        #     [260, 10, 280, 250],
+        #     pi / 4 + (100 - self.battery) * (pi / 2) / 100,
+        #     pi - pi / 4,
+        #     25,
+        # )
 
         self.blitRotate(
             self.main_surface,
             self.cursor_image,
-            (400, 165),
+            (600, 165),
             self.cursor_pivot,
             self.angle,
         )
 
         self.blitRotate(
-            self.main_surface, self.arrow, (395, 320), self.arrow_pivot, 90 + self.steer
+            self.main_surface, self.arrow, (595, 320), self.arrow_pivot, 90 + self.steer
         )
 
         if -self.steer > 0:
             steer_show = self.font_little.render(
                 "+" + str(-self.steer) + "°", True, (255, 255, 255)
             )
-            self.main_surface.blit(steer_show, (425, 300))
+            self.main_surface.blit(steer_show, (625, 300))
         elif -self.steer <= 0:
             steer_show = self.font_little.render(
                 str(-self.steer) + "°", True, (255, 255, 255)
             )
-            self.main_surface.blit(steer_show, (337, 300))
+            self.main_surface.blit(steer_show, (537, 300))
         super().draw()

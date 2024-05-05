@@ -79,16 +79,16 @@ class threadGUI_start(ThreadWithStop):
                     running = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     dashBoard.clicked = True
-                elif event.type == pygame.MOUSEMOTION:
-                    if dashBoard.clicked:
-                        mouse_pos = pygame.mouse.get_pos()
-                        dashBoard.table.update_checkbox(mouse_pos)
-                        dashBoard.table.scrollSlider.colliding(mouse_pos)
+                # elif event.type == pygame.MOUSEMOTION:
+                #     if dashBoard.clicked:
+                #         mouse_pos = pygame.mouse.get_pos()
+                #         dashBoard.table.update_checkbox(mouse_pos)
+                #         dashBoard.table.scrollSlider.colliding(mouse_pos)
                 if event.type == pygame.MOUSEBUTTONUP:
                     dashBoard.clicked = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    dashBoard.table.update_checkbox(mouse_pos)
+                    # dashBoard.table.update_checkbox(mouse_pos)
                     if dashBoard.buttonAutonomEnable:
                         if dashBoard.button.colliding(mouse_pos):
                             dashBoard.button.update()
@@ -101,20 +101,20 @@ class threadGUI_start(ThreadWithStop):
                             dashBoard.buttonAutonomEnable = (
                                 not dashBoard.buttonAutonomEnable
                             )
-                    if dashBoard.buttonSave.colliding(mouse_pos):
-                        dashBoard.table.update_json()
-                        dashBoard.set_text("save")
-                    if dashBoard.buttonReset.colliding(mouse_pos):
-                        dashBoard.table.reset_json()
-                        dashBoard.set_text("reset")
-                    if dashBoard.buttonLoad.colliding(mouse_pos):
-                        dashBoard.table.load()
-                        dashBoard.set_text("load")
-                elif event.type == pygame.MOUSEWHEEL:
-                    mouse_pos = pygame.mouse.get_pos()
-                    dashBoard.table.scrollSlider.mouseWheelInteract(mouse_pos, event.y)
+                    # if dashBoard.buttonSave.colliding(mouse_pos):
+                    #     dashBoard.table.update_json()
+                    #     dashBoard.set_text("save")
+                    # if dashBoard.buttonReset.colliding(mouse_pos):
+                    #     dashBoard.table.reset_json()
+                    #     dashBoard.set_text("reset")
+                    # if dashBoard.buttonLoad.colliding(mouse_pos):
+                    #     dashBoard.table.load()
+                    #     dashBoard.set_text("load")
+                # elif event.type == pygame.MOUSEWHEEL:
+                #     mouse_pos = pygame.mouse.get_pos()
+                #     dashBoard.table.scrollSlider.mouseWheelInteract(mouse_pos, event.y)
             if current_time - last_1_sec_call_time >= 50:  # 1000 ms = 1 second
-                dashBoard.alerts.update(0.05)
+                # dashBoard.alerts.update(0.05)
                 dashBoard.updateTimers(0.05)
                 last_1_sec_call_time = current_time
             if current_time - last_60_fps_call_time >= 16:
