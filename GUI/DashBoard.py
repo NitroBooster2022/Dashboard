@@ -89,6 +89,8 @@ class DashBoard(State):
         steer=0,
     ):
         super().__init__(game, window)
+        self.x0 = 0
+        self.y0 = 0
         self.pipeRecv = pipeRecv
         self.pipeSend = pipeSend
         self.battery = battery
@@ -189,10 +191,12 @@ class DashBoard(State):
         # self.gmapping_sub = rospy.Subscriber("/chassis_pose", PoseWithCovarianceStamped, self.gmapping_callback, queue_size=3)
         # self.hector_sub = rospy.Subscriber("/poseupdate", PoseWithCovarianceStamped, self.hector_callback, queue_size=3)
         self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback, queue_size=3)
-        self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
+        # self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
         self.imu1_sub = rospy.Subscriber("/car1/imu", Imu, self.imu1_callback, queue_size=3)
         self.waypoint_sub = rospy.Subscriber("/waypoints", Float32MultiArray, self.waypoint_callback, queue_size=3)
         self.cars_sub = rospy.Subscriber("/car_locations", Float32MultiArray, self.cars_callback, queue_size=3)
+        self.state_offset_sub = rospy.Subscriber("/state_offset", Float32MultiArray, self.state_offset_callback, queue_size=3)
+
 
         self.numObj = 0
         self.detected_objects = np.zeros(7)
@@ -344,8 +348,11 @@ class DashBoard(State):
     #     self.ekfState[0] = data.pose.pose.position.x + 11.71
     #     self.ekfState[1] = data.pose.pose.position.y +  1.895
     def odom_callback(self, data):
-        self.odomState[0] = data.pose.pose.position.x
-        self.odomState[1] = data.pose.pose.position.y
+        self.odomState[0] = data.pose.pose.position.x + self.x0
+        self.odomState[1] = data.pose.pose.position.y + self.y0
+    def state_offset_callback(self, data):
+        self.x0 = data.data[0]
+        self.y0 = data.data[1]
     def imu1_callback(self, imu):
         self.yaw1 = -tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
         self.accelList_x.append(imu.linear_acceleration.x)
