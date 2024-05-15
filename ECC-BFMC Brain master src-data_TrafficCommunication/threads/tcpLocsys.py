@@ -80,8 +80,10 @@ class tcpLocsys(protocol.ClientFactory):
         message["id"] = 3
         print(message)
         pose = PoseWithCovarianceStamped()
+        pose.header.stamp = rospy.Time.now() #-delay
         pose.x = message["x"]
         pose.y = message["y"]
+        print(pose)
         self.gps_pub.publish(pose)
         
         # message_to_send = {
