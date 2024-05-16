@@ -81,6 +81,7 @@ class tcpClient(protocol.ClientFactory):
     def receive_data_from_server(self, message):
         msgPrepToList = message.replace("}{", "}}{{")
         msglist = msgPrepToList.split("}{")
+        print(msglist)
         for msg in msglist:
             msg = json.loads(msg)
             if msg["reqORinfo"] == "request":
