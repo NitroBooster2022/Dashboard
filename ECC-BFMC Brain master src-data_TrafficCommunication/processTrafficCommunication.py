@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     # filename = "useful/publickey_server.pem"
     filename = "useful/publickey_server_test.pem"
-    deviceID = 3
+    deviceID = 2
     traffic_communication = threadTrafficCommunication(
         shared_memory, queueList, deviceID, filename
     )
