@@ -46,6 +46,7 @@ class tcpLocsys(protocol.ClientFactory):
         self.sendQueue = sendQueue
         self.deviceID = id
         self.gps_pub = rospy.Publisher("/gps", PoseWithCovarianceStamped, queue_size=10)
+        self.cov = [0] * 36
 
     def clientConnectionLost(self, connector, reason):
         print(
@@ -80,9 +81,12 @@ class tcpLocsys(protocol.ClientFactory):
         message["id"] = 3
         print(message)
         pose = PoseWithCovarianceStamped()
-        pose.header.stamp = rospy.Time.now() #-delay
-        pose.x = message["x"]
-        pose.y = message["y"]
+        pose.header.stamp = rospy.Time.now() - rospy.Duration(0.75)
+        pose.pose.pose.position.x = float(message["x"])
+        pose.pose.pose.position.y = float(message["Y"])
+        self.cov[0] = 0.04
+        self.cov[7] = 0.04
+        pose.pose.covariance = self.cov
         print(pose)
         self.gps_pub.publish(pose)
         
