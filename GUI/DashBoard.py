@@ -191,7 +191,7 @@ class DashBoard(State):
         # self.gmapping_sub = rospy.Subscriber("/chassis_pose", PoseWithCovarianceStamped, self.gmapping_callback, queue_size=3)
         # self.hector_sub = rospy.Subscriber("/poseupdate", PoseWithCovarianceStamped, self.hector_callback, queue_size=3)
         self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback, queue_size=3)
-        # self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
+        self.odom_sub = rospy.Subscriber("/gps", PoseWithCovarianceStamped, self.odom_callback, queue_size=3)
         self.imu1_sub = rospy.Subscriber("/car1/imu", Imu, self.imu1_callback, queue_size=3)
         self.waypoint_sub = rospy.Subscriber("/waypoints", Float32MultiArray, self.waypoint_callback, queue_size=3)
         self.cars_sub = rospy.Subscriber("/car_locations", Float32MultiArray, self.cars_callback, queue_size=3)
@@ -348,8 +348,8 @@ class DashBoard(State):
     #     self.ekfState[0] = data.pose.pose.position.x + 11.71
     #     self.ekfState[1] = data.pose.pose.position.y +  1.895
     def odom_callback(self, data):
-        self.odomState[0] = data.pose.pose.position.x + self.x0
-        self.odomState[1] = data.pose.pose.position.y + self.y0
+        self.gpsState[0] = data.pose.pose.position.x
+        self.gpsState[1] = data.pose.pose.position.y
     def state_offset_callback(self, data):
         self.x0 = data.data[0]
         self.y0 = data.data[1]
@@ -372,6 +372,11 @@ class DashBoard(State):
                     ((int((self.odomState[0]+0.75*math.cos(self.yaw1))/20.696*self.map1.shape[1]),int((13.786- (self.odomState[1]+0.75*math.sin(self.yaw1)))/13.786*self.map1.shape[0]))), color=(255,0,255), thickness=3)
         cv2.circle(img_map, (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), radius=6, color=(0, 255, 0), thickness=-1)
         # cv2.addText(img_map, "Odom", (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), "Arial", 1, (0, 255, 0))
+
+        # gps 
+        img_map = cv2.arrowedLine(img_map, (int(self.gpsState[0]/20.696*self.map1.shape[1]),int((13.786-self.gpsState[1])/13.786*self.map1.shape[0])),
+                    ((int((self.gpsState[0]+0.75*math.cos(self.yaw1))/20.696*self.map1.shape[1]),int((13.786- (self.gpsState[1]+0.75*math.sin(self.yaw1)))/13.786*self.map1.shape[0]))), color=(255,0,255), thickness=3)
+        cv2.circle(img_map, (int(self.gpsState[0]/20.696*self.map1.shape[1]),int((13.786-self.gpsState[1])/13.786*self.map1.shape[0])), radius=6, color=(255, 0, 0), thickness=-1)
 
         # display the waypoints
         if self.waypoints is not None:
