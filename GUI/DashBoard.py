@@ -354,7 +354,7 @@ class DashBoard(State):
         self.x0 = data.data[0]
         self.y0 = data.data[1]
     def imu1_callback(self, imu):
-        self.yaw1 = -tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
+        self.yaw1 = tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
         self.accelList_x.append(imu.linear_acceleration.x)
         self.accelList_y.append(imu.linear_acceleration.y)
 
