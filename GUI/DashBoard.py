@@ -204,8 +204,8 @@ class DashBoard(State):
         self.class_names = ["oneway", "highwayentrance", "stopsign", "roundabout", "park", "crosswalk", "noentry", "highwayexit", "priority", "lights", "block", "pedestrian", "car"]
         self.sign_sub = rospy.Subscriber("/sign", Float32MultiArray, self.sign_callback, queue_size=3)
 
-        print(os.path.dirname(os.path.realpath(__file__))+'/map2024.png')
-        self.map1 = cv2.imread(os.path.dirname(os.path.realpath(__file__))+'/map2024.png')
+        print(os.path.dirname(os.path.realpath(__file__))+'/Track.png')
+        self.map1 = cv2.imread(os.path.dirname(os.path.realpath(__file__))+'/Track.png')
         #shape is (8107, 12223, 3)
         # self.map = cv2.resize(self.map, (700, int(self.map.shape[0]/self.map.shape[1]*700)))
         self.map1 = cv2.resize(self.map1, (700, int(1/1.38342246*700)))
@@ -363,32 +363,32 @@ class DashBoard(State):
         img_map = self.map1.copy()
         
         # ekf
-        img_map = cv2.arrowedLine(img_map, (int(self.ekfState[0]/20.541*self.map1.shape[1]),int((13.656-self.ekfState[1])/13.656*self.map1.shape[0])),
-                    ((int((self.ekfState[0]+0.75*math.cos(self.yaw1))/20.541*self.map1.shape[1]),int((13.656- (self.ekfState[1]+0.75*math.sin(self.yaw1)))/13.656*self.map1.shape[0]))), color=(255,0,255), thickness=3)
-        cv2.circle(img_map, (int(self.ekfState[0]/20.541*self.map1.shape[1]),int((13.656-self.ekfState[1])/13.656*self.map1.shape[0])), radius=6, color=(0, 0, 255), thickness=-1)
+        img_map = cv2.arrowedLine(img_map, (int(self.ekfState[0]/20.696*self.map1.shape[1]),int((13.786-self.ekfState[1])/13.786*self.map1.shape[0])),
+                    ((int((self.ekfState[0]+0.75*math.cos(self.yaw1))/20.696*self.map1.shape[1]),int((13.786- (self.ekfState[1]+0.75*math.sin(self.yaw1)))/13.786*self.map1.shape[0]))), color=(255,0,255), thickness=3)
+        cv2.circle(img_map, (int(self.ekfState[0]/20.696*self.map1.shape[1]),int((13.786-self.ekfState[1])/13.786*self.map1.shape[0])), radius=6, color=(0, 0, 255), thickness=-1)
 
         # odom 
-        img_map = cv2.arrowedLine(img_map, (int(self.odomState[0]/20.541*self.map1.shape[1]),int((13.656-self.odomState[1])/13.656*self.map1.shape[0])),
-                    ((int((self.odomState[0]+0.75*math.cos(self.yaw1))/20.541*self.map1.shape[1]),int((13.656- (self.odomState[1]+0.75*math.sin(self.yaw1)))/13.656*self.map1.shape[0]))), color=(255,0,255), thickness=3)
-        cv2.circle(img_map, (int(self.odomState[0]/20.541*self.map1.shape[1]),int((13.656-self.odomState[1])/13.656*self.map1.shape[0])), radius=6, color=(0, 255, 0), thickness=-1)
-        # cv2.addText(img_map, "Odom", (int(self.odomState[0]/20.541*self.map1.shape[1]),int((13.656-self.odomState[1])/13.656*self.map1.shape[0])), "Arial", 1, (0, 255, 0))
+        img_map = cv2.arrowedLine(img_map, (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])),
+                    ((int((self.odomState[0]+0.75*math.cos(self.yaw1))/20.696*self.map1.shape[1]),int((13.786- (self.odomState[1]+0.75*math.sin(self.yaw1)))/13.786*self.map1.shape[0]))), color=(255,0,255), thickness=3)
+        cv2.circle(img_map, (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), radius=6, color=(0, 255, 0), thickness=-1)
+        # cv2.addText(img_map, "Odom", (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), "Arial", 1, (0, 255, 0))
 
         # display the waypoints
         if self.waypoints is not None:
             for i in range(0, len(self.waypoints), 8):
-                cv2.circle(img_map, (int(self.waypoints[i]/20.541*self.map1.shape[1]),int((13.656-self.waypoints[i+1])/13.656*self.map1.shape[0])), radius=1, color=(0, 255, 255), thickness=-1)
+                cv2.circle(img_map, (int(self.waypoints[i]/20.696*self.map1.shape[1]),int((13.786-self.waypoints[i+1])/13.786*self.map1.shape[0])), radius=1, color=(0, 255, 255), thickness=-1)
 
         # display the detected cars
         if self.detected_cars is not None:
             for i in range(2, len(self.detected_cars), 2):
-                cv2.circle(img_map, (int(self.detected_cars[i]/20.541*self.map1.shape[1]),int((13.656-self.detected_cars[i+1])/13.656*self.map1.shape[0])), radius=5, color=(255, 255, 0), thickness=-1)
+                cv2.circle(img_map, (int(self.detected_cars[i]/20.696*self.map1.shape[1]),int((13.786-self.detected_cars[i+1])/13.786*self.map1.shape[0])), radius=5, color=(255, 255, 0), thickness=-1)
         
-        # print([int(self.ekfState[0]/20.541*self.map1.shape[1]),int((13.656-self.ekfState[1])/13.656*self.map1.shape[0])])
+        # print([int(self.ekfState[0]/20.696*self.map1.shape[1]),int((13.786-self.ekfState[1])/13.786*self.map1.shape[0])])
         # print(self.map1.shape)
         #shape is (8107, 12223, 3)
         # Convert the OpenCV image to RGB format
         map1_rgb = cv2.cvtColor(img_map, cv2.COLOR_BGR2RGB)
-        self.map.new_coordinates(int(self.odomState[0]/20.541*self.map1.shape[1]),int((13.656-self.odomState[1])/13.656*self.map1.shape[0]), map1_rgb)
+        self.map.new_coordinates(int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0]), map1_rgb)
         self.map.update()
 
         # windowName = 'track'
