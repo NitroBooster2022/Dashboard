@@ -82,8 +82,8 @@ class tcpLocsys(protocol.ClientFactory):
         print(message)
         pose = PoseWithCovarianceStamped()
         pose.header.stamp = rospy.Time.now() - rospy.Duration(0.75)
-        pose.pose.pose.position.x = message["x"]
-        pose.pose.pose.position.y = message["Y"]
+        pose.pose.pose.position.x = float(message["x"])
+        pose.pose.pose.position.y = float(message["Y"])
         print(pose)
         self.covariance[0] = pow(0.2, 2)/12
         self.covariance[7] = pow(0.2, 2)/12
