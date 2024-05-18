@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     sys.path.insert(0, "../../..")
 
-from src.templates.workerprocess import WorkerProcess
-from src.data.CarsAndSemaphores.threads.threadCarsAndSemaphores import (
+from workerprocess import WorkerProcess
+from threads.threadCarsAndSemaphores import (
     threadCarsAndSemaphores,
 )
 
@@ -86,6 +86,10 @@ if __name__ == "__main__":
     }
 
     allProcesses = list()
+
+    import rospy
+    rospy.init_node('TrafficlightNode', anonymous=True)
+
     process = processCarsAndSemaphores(queueList)
     process.start()
 
