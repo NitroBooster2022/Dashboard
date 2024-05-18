@@ -89,6 +89,7 @@ class tcpLocsys(protocol.ClientFactory):
         self.covariance[7] = pow(0.2, 2)/12
         self.covariance[35] = pow(0.2, 2)/12
         pose.pose.covariance = self.covariance
+        pose.header.frame_id = 'odom'
         self.gps_pub.publish(pose)
         
         # message_to_send = {
