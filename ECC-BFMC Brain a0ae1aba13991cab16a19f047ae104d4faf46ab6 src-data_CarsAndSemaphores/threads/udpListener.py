@@ -27,8 +27,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 
 import json
-from src.utils.messages.allMessages import Cars, Semaphores
+# from src.utils.messages.allMessages import Cars, Semaphores
 from twisted.internet import protocol
+import rospy
+from std_msgs.msg import String
 
 
 class udpListener(protocol.DatagramProtocol):
@@ -40,6 +42,8 @@ class udpListener(protocol.DatagramProtocol):
 
     def __init__(self, queue):
         self.queue = queue
+        self.tl_pub = rospy.Publisher("/trafficlights", String, queue_size=1)
+
 
     def datagramReceived(self, datagram, addr):
         """Specific function for receiving the information. It will select and create different dictionary for each type of data we receive(car or semaphore)
@@ -51,25 +55,31 @@ class udpListener(protocol.DatagramProtocol):
         dat = json.loads(dat)
 
         if dat["device"] == "semaphore":
-            tmp = {"id": dat["id"], "state": dat["state"], "x": dat["x"], "y": dat["y"]}
-            self.queue.put(
-                {
-                    "Owner": Semaphores.Owner.value,
-                    "msgID": Semaphores.msgID.value,
-                    "msgType": Semaphores.msgType.value,
-                    "msgValue": tmp,
-                }
-            )
-        elif dat["device"] == "car":
-            tmp = {"id": dat["id"], "x": dat["x"], "y": dat["y"]}
-            self.queue.put(
-                {
-                    "Owner": Cars.Owner.value,
-                    "msgID": Cars.msgID.value,
-                    "msgType": Cars.msgType.value,
-                    "msgValue": tmp,
-                }
-            )
+            # tmp = {"id": dat["id"], "state": dat["state"], "x": dat["x"], "y": dat["y"]}
+            print(dat)
+            msg = String()
+            msg.data = dat["state"]
+            print(msg)
+            self.tl_pub.publish(msg)
+            # self.queue.put(
+            #     {
+            #         "Owner": Semaphores.Owner.value,
+            #         "msgID": Semaphores.msgID.value,
+            #         "msgType": Semaphores.msgType.value,
+            #         "msgValue": tmp,
+            #     }
+            # )
+        # elif dat["device"] == "car":
+            # tmp = {"id": dat["id"], "x": dat["x"], "y": dat["y"]}
+            # print(dat)
+            # self.queue.put(
+            #     {
+            #         "Owner": Cars.Owner.value,
+            #         "msgID": Cars.msgID.value,
+            #         "msgType": Cars.msgType.value,
+            #         "msgValue": tmp,
+            #     }
+            # )
 
     def stopListening(self):
         super().stopListening()
