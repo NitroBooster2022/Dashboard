@@ -349,6 +349,7 @@ class DashBoard(State):
     def odom_callback(self, data):
         self.odomState[0] = data.pose.pose.position.x + self.x0
         self.odomState[1] = data.pose.pose.position.y + self.y0
+        # print(self.odomState)
     def gps_callback(self, data):
         self.gpsState[0] = data.pose.pose.position.x
         self.gpsState[1] = data.pose.pose.position.y
@@ -356,7 +357,7 @@ class DashBoard(State):
         self.x0 = data.data[0]
         self.y0 = data.data[1]
     def imu1_callback(self, imu):
-        self.yaw1 = tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
+        self.yaw1 = -tf.transformations.euler_from_quaternion([imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w])[2]
         self.accelList_x.append(imu.linear_acceleration.x)
         self.accelList_y.append(imu.linear_acceleration.y)
 
@@ -373,7 +374,7 @@ class DashBoard(State):
         img_map = cv2.arrowedLine(img_map, (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])),
                     ((int((self.odomState[0]+0.75*math.cos(self.yaw1))/20.696*self.map1.shape[1]),int((13.786- (self.odomState[1]+0.75*math.sin(self.yaw1)))/13.786*self.map1.shape[0]))), color=(255,0,255), thickness=3)
         cv2.circle(img_map, (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), radius=6, color=(0, 255, 0), thickness=-1)
-        # cv2.addText(img_map, "Odom", (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), "Arial", 1, (0, 255, 0))
+        # cv2.addText(img_map, str(self.odomState), (int(self.odomState[0]/20.696*self.map1.shape[1]),int((13.786-self.odomState[1])/13.786*self.map1.shape[0])), "Arial", 1, (0, 255, 0))
 
         # gps 
         img_map = cv2.arrowedLine(img_map, (int(self.gpsState[0]/20.696*self.map1.shape[1]),int((13.786-self.gpsState[1])/13.786*self.map1.shape[0])),
